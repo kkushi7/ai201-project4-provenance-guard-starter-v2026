@@ -54,18 +54,24 @@
 ### Signal one — the model signal
 
 **What it measures:**
+detector.py::model_signal measures the text's predictability to a local language model using perplexity. Low perplexity means the model finds the word sequence easy to predict, producing a higher AI-likelihood score.
 
 **Why that might differ between human and AI writing:**
+Language models generate text by selecting likely next words, so generated prose often uses common words, familiar sentence patterns, and predictable transitions. Human writing may be more surprising because of unusual word choices, abrupt changes, or personal phrasing.
 
 **What it can't see:**
+It cannot determine authorship. Predictable human writing—such as plain writing, second-language writing, or writing deliberately aimed at clarity—can look AI-generated. Conversely, unusual vocabulary or deliberately awkward phrasing can make AI text look human. It also does not understand who wrote the text or whether it was edited after generation.
 
 ### Signal two — the style signal
 
 **What it measures:**
+stylometry.py::style_signal measures the surface shape of the text without interpreting its meaning. It combines sentence-length variation, vocabulary repetition through type-token ratio, and punctuation density.
 
 **Why that might differ between human and AI writing:**
+Generated prose often has relatively even sentence lengths, repeated common vocabulary, and regular punctuation patterns. Human writing tends to be more uneven: short and long sentences may be mixed, vocabulary may be more idiosyncratic, and punctuation habits may vary more from writer to writer.
 
 **What it can't see:**
+It cannot understand meaning, context, or authorship. Any text-preserving or meaning-preserving edit that changes its surface form—such as adding typos, splitting or joining sentences, changing punctuation, or inserting a quotation—can change the score without changing who wrote the text. A human can naturally have AI-like stylistic statistics, and AI text can be edited to resemble human writing.
 
 ### The combining rule
 
