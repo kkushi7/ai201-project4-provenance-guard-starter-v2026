@@ -44,61 +44,46 @@ Two things worth knowing before you pick numbers:
 ---
 ## 1.
 
-<!-- Your criterion. It must name a number. -->
-
-
+Of 10 independently written human samples, at most 1 may receive the high-confidence AI label.
 
 **Why this target:**
-
-
+A false accusation can unfairly damage a writer’s credibility, so the system should prioritize avoiding confident accusations of human writing. One error in 10 allows for imperfect signals without treating frequent false positives as acceptable.
 
 ---
 
 ## 2.
 
-<!-- Your criterion. -->
-
-
+The average combined score for 5 clearly AI-generated samples must be at least 0.20 higher than the average combined score for 5 clearly human-written samples.
 
 **Why this target:**
-
-
+The detector does not need perfect separation, but clearly different source groups should produce a measurable difference. A 0.20 gap is large enough to show that the signals provide useful evidence rather than random scores.
 
 ---
 
 ## 3.
 
-<!-- Your criterion. -->
-
-
+A test set of at least 15 submissions must produce all three labels: high-confidence human, unsure, and high-confidence AI, with at least 1 submission in each category.
 
 **Why this target:**
-
-
+Every label represents a different user-facing outcome. If one label cannot be reached, the thresholds or scoring rule are not useful in practice and uncertain cases may be forced into an overconfident category.
 
 ---
 
 ## 4.
 
-<!-- Your criterion. -->
-
-
+For every valid appeal submitted for an existing content_id, the service must return HTTP 200, append exactly one audit entry with "event": "appeal" and "status": "under_review", and leave the original decision entry unchanged.
 
 **Why this target:**
-
-
+ A writer needs a reliable way to challenge a decision. Keeping the original entry while appending the appeal preserves an auditable history instead of silently overwriting the first decision.
 
 ---
 
 ## 5.
 
-<!-- Your criterion. -->
-
-
+For each of these inputs—missing text, empty text, non-string text, and text longer than 10,000 characters—the /submit endpoint must return a client-error response in the 400–413 range, include a JSON error message, and must not run the detector or create a normal decision entry.
 
 **Why this target:**
-
-
+Invalid or excessively large input should be rejected clearly and cheaply rather than causing a server error, wasting model resources, or producing a misleading score.
 
 ---
 
