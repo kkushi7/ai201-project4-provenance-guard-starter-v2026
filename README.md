@@ -132,9 +132,18 @@ $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
   -d '{"text": "...", "creator_id": "..."}'
 ```
-
+curl.exe -X POST http://127.0.0.1:5000/submit `
+  -H "Content-Type: application/json" `
+  -d '{"text":"The system requires careful testing. It should record every decision clearly and consistently. Each submission receives a unique identifier. The service records the result for later review.","creator_id":"writer-001"}'
 ```json
-
+{
+  "content_id": "generated-uuid",
+  "confidence": null,
+  "guess": null,
+  "label": null,
+  "model_score": 0.1234,
+  "style_score": null
+}
 ```
 
 **An appeal**
@@ -156,7 +165,7 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 ```
 
 ```json
-
+     {"timestamp": "2026-11-03T08:45:40+00:00", "content_id": "99f07cde-7fae-46df-85ce-f92c247b9e17", "creator_id": "writer-001", "guess": null, "model_score": 0.2659, "style_score": null, "combined_score": null, "label": null, "status": "decided"}
 ```
 
 ---
