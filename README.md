@@ -79,13 +79,22 @@ It cannot understand meaning, context, or authorship. Any text-preserving or mea
      signals disagree? -->
 
 **The rule:**
+I combine the two scores with a weighted average. The model signal and style
+signal each contribute equally. Both signals point in the same direction:
+higher means more likely AI.
+
+When the signals disagree, the weighted average pulls the result toward the
+middle rather than allowing either signal to make a confident decision alone.
+Therefore, disagreement produces more uncertainty. For example, a model score
+of 0.6722 and a style score of 0.4338 combine to 0.5530, which is in the unsure
+range.
 
 **The numbers:**
-| Test piece | Model score | Style score | Where they landed |
-|---|---:|---:|---|
-| clearly AI-like | 0.6828 | 0.4573 | Both lean AI, but only the model signal crosses 0.65 |
-| clearly human-like | 0.3190 | 0.2972 | Both lean human, below 0.35 |
-| plain conventional writing | 0.6722 | 0.4338 | Model signal leans AI; style signal remains unsure |
+- Model signal weight: 0.50
+- Style signal weight: 0.50
+- High-confidence human: 0.00–0.35
+- Unsure: 0.35–0.65
+- High-confidence AI: 0.65–1.00
 
 **Where it lives:** `scoring.py::combine_signals`
 
@@ -93,6 +102,12 @@ It cannot understand meaning, context, or authorship. Any text-preserving or mea
      somewhere else, say where. -->
 
 **A case where my two signals split, and what my rule does with it:**
+| Test piece | Model score | Style score | Where they landed |
+|---|---:|---:|---|
+| clearly AI-like | 0.6828 | 0.4573 | Both lean AI, but only the model signal crosses 0.65 |
+| clearly human-like | 0.3190 | 0.2972 | Both lean human, below 0.35 |
+| plain conventional writing | 0.6722 | 0.4338 | Model signal leans AI; style signal remains unsure |
+
 The plain conventional writing sample split the signals. The model score was
 0.6722, which is above the high-confidence AI threshold, while the style score
 was 0.4338, which is in the unsure range. This happens because plain human
