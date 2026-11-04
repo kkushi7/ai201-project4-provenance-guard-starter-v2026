@@ -181,8 +181,18 @@ $ curl -X POST http://127.0.0.1:5000/appeal \
   -H "Content-Type: application/json" \
   -d '{"content_id": "...", "reasoning": "..."}'
 ```
+curl.exe -X POST "http://127.0.0.1:5000/appeal" `
+  -H "Content-Type: application/json" `
+  --data-raw '{"content_id": "10e65145-d84c-49f6-9198-9cc9649a0b5d","reasoning":"I wrote this submission myself and would like the decision reviewed."}'
 
 ```json
+{
+  "content_id": "10e65145-d84c-49f6-9198-9cc9649a0b5d",
+  "creator_id": "writer-001",
+  "event": "appeal",
+  "status": "under_review",
+  "reasoning": "I wrote this submission myself and would like the decision reviewed."
+}
 
 ```
 
@@ -195,6 +205,8 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 ```json
      {"timestamp": "2026-11-03T08:45:40+00:00", "content_id": "99f07cde-7fae-46df-85ce-f92c247b9e17", "creator_id": "writer-001", "guess": null, "model_score": 0.2659, "style_score": null, "combined_score": null, "label": null, "status": "decided"}
 ```
+     {"timestamp": "2026-11-04T05:17:15+00:00", "content_id": "10e65145-d84c-49f6-9198-9cc9649a0b5d", "creator_id": "writer-001", "event": "appeal", "status": "under_review", "reasoning": "I wrote this submission myself and would like the decision reviewed."}
+
 
 ---
 
