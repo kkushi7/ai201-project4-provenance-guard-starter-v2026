@@ -38,8 +38,7 @@
 
 <!-- The path a submission takes, from arriving to the label a reader sees.
      Six or seven steps — this is the trace you wrote in Milestone 1. -->
-
-
+A submission arrives at POST /submit as JSON containing text and a creator ID. The service generates a unique content ID, runs the model signal from detector.py, calculates the surface-style signal from stylometry.py, and combines both scores in scoring.py. It converts the combined score into a human-readable label, records the decision through audit.py, and returns the content ID, both signal scores, combined score, guess, confidence, and label. A writer can later send the content ID and reasoning to POST /appeal; the appeal is appended to the audit log with an under_review status. GET /log returns the recorded entries as JSON.
 
 ---
 
@@ -138,8 +137,11 @@ score should therefore fall between 0.4338 and 0.6722.
 <!-- It's the hardest of the three. It has to admit uncertainty without
      sounding like an accusation, because the person reading it may well have
      written every word themselves. -->
-
-
+I used neutral language because the system cannot prove who wrote a piece of
+text. The unsure result should communicate that the two signals did not provide
+enough agreement for a reliable conclusion, rather than accuse the writer of
+using AI. Saying "We cannot tell reliably" acknowledges the system's limits and
+leaves room for the writer's own explanation.
 
 ---
 
@@ -215,14 +217,26 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 **Moment 1**
 
 - *What I asked for:*
+Help me understand what the model signal and stylometry signal measure, including the blind spot of each signal.
+
 - *What came back:*
+An explanation that detector.py measures language-model predictability using perplexity, while stylometry.py measures surface features such as sentence-length variation, vocabulary repetition, and punctuation density. The model signal cannot determine authorship, and the style signal cannot understand meaning or context.
+
 - *What I changed:*
+I rewrote the explanation in my own README language and included the limitations of both signals.
+
 
 **Moment 2**
 
 - *What I asked for:*
+Help me implement and test the scoring pipeline, including the style signal, combining rule, labels, audit logging, and appeal route.
+
 - *What came back:*
+Suggestions for implementing the three stylometry measures, combining the signals with equal weights, writing reader-facing labels, passing both signal scores through /submit, recording decisions with audit.log_decision, and recording appeals with audit.log_appeal.
+
 - *What I changed:*
+I reviewed the suggestions against the starter code, applied the relevant changes, tested the signals on multiple text samples, used curl to test /submit, /appeal, and /log, and documented the observed scores and audit entries in the README.
+
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
