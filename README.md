@@ -244,24 +244,33 @@ I reviewed the suggestions against the starter code, applied the relevant change
 
 ## Rate Limiting
 
-**My limits:** ___ per minute, ___ per day
+**My limits:** 5 per minute, 100 per day
 
 **Why those numbers and not others:**
 <!-- Think about two people: a real writer submitting their own work a few
      times an hour, and a script sending a thousand variations to map your
      thresholds. Your numbers have to be liveable for the first and hostile to
      the second. -->
+I chose 5 submissions per minute because a writer can still submit several
+revisions, while an automated script trying many variations is stopped quickly.
+I chose 100 submissions per day to allow regular use without permitting an
+unlimited number of expensive model evaluations or threshold-probing requests.
+The lower limits prioritize protecting the service and reducing false
+confidence from repeated automated experiments.
 
 **What a caller counts as:** <!-- per address, or per creator_id? They fail
 differently — one script can look like a thousand callers, and one household
 can look like one. -->
+A caller is identified by `creator_id`. This gives each writer an independent
+limit and makes the behavior easy to test. The tradeoff is that a malicious
+caller could evade the limit by changing creator IDs; using an IP address would
+make that harder but could unfairly group writers who share a network.
 
 **The run of status codes when I pushed past it:**
 
 <!-- python run_attacks.py --flood 15 -->
 
-```
-
+```200 200 200 200 200 429 429 429 429 429 429 429 429 429 429
 ```
 
 ---
