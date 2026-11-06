@@ -287,13 +287,22 @@ make that harder but could unfairly group writers who share a network.
 <!-- Choose entries that show the interesting failures, not the ten easiest. -->
 
 ```json
-
+{"content_id":"549112ef-68bd-4707-b58b-69337d8ea872","creator_id":"attacker_EV10","guess":"ai","combined_score":0.8412,"status":"decided"}
+{"content_id":"6def28f2-84ae-41c3-90d8-a7834c1eb141","creator_id":"attacker_FP01","guess":"unsure","combined_score":0.5564,"status":"decided"}
+{"content_id":"584a35e1-d384-46df-be7e-871ddcf381d0","creator_id":"attacker_FP03","guess":"ai","combined_score":0.6756,"status":"decided"}
+{"content_id":"9ce14d7c-69e3-4e4b-b331-a52dd34199d0","creator_id":"attacker_FP05","guess":"ai","combined_score":0.7048,"status":"decided"}
+{"content_id":"dd86f194-049d-4936-9863-b9410b81740c","creator_id":"attacker_FP07","guess":"ai","combined_score":0.6763,"status":"decided"}
+{"content_id":"bfbba0ec-6314-4f81-bce8-73a84d40b1f0","creator_id":"attacker_PI01","guess":"unsure","combined_score":0.3965,"status":"decided"}
+{"content_id":"0273da9e-176e-4849-b0fa-6befd1cd4209","creator_id":"attacker_PI04","guess":"unsure","combined_score":0.4362,"status":"decided"}
+{"content_id":"35073a32-72a6-45ba-b603-dcc139fbfb76","creator_id":"attacker_MF06","guess":"ai","combined_score":0.8984,"status":"decided"}
+{"content_id":"cfc66ffd-8953-4f32-8d18-9878dd538926","creator_id":"attacker_MF07","guess":"ai","combined_score":0.9437,"status":"decided"}
+{"content_id":"eb37f7bf-abcc-4c74-a98b-c60b1bf4e3b2","creator_id":{"id":"x"},"guess":"human","combined_score":0.2691,"status":"decided"}
+{"creator_id":"attacker_flood","event":"rejected","status":"rejected","reason":"rate_limited","limit":"5 per 1 minute"}
 ```
 
 **The single worst outcome** — the one I'd least want to explain to a writer
 whose work got caught by it:
-
-
+The worst outcome was FP07. It was human writing that deliberately repeated a phrase, but the service classified it as AI with a score of 0.6763. This is a difficult false positive to explain because the repeated wording was an intentional stylistic choice.
 
 ---
 
