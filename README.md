@@ -237,6 +237,42 @@ Suggestions for implementing the three stylometry measures, combining the signal
 - *What I changed:*
 I reviewed the suggestions against the starter code, applied the relevant changes, tested the signals on multiple text samples, used curl to test /submit, /appeal, and /log, and documented the observed scores and audit entries in the README.
 
+**Moment 3**
+
+- *What I asked for:*
+Help me interpret the before and after evaluation runs, assign MET or MISSED
+verdicts, diagnose broken attacks by stage and mechanism, and choose one
+improvement.
+
+- *What came back:*
+A structured comparison of the criteria and attack results. The main
+recommendation was to fix input validation before changing scoring because
+malformed requests were reaching the detector and creating server errors.
+
+- *What I changed:*
+I checked the results against my five acceptance criteria, added validation in
+`app.py::submit` for missing, empty, non-string, and oversized text, reran the
+evaluation, and documented the remaining false-positive, evasion, malformed,
+and flooding failures. I kept the original targets instead of lowering them
+after missing them.
+
+**Moment 4**
+
+- *What I asked for:*
+Help me identify the smallest code change that would fix the malformed-input
+failures without changing the detector or scoring behavior.
+
+- *What came back:*
+A recommendation to validate the request body at the start of
+`app.py::submit`. The validation should check that the body is a JSON object,
+that `text` exists, that it is a non-empty string, and that its length is no
+more than 10,000 characters.
+
+- *What I changed:*
+I added those checks before the detector and stylometry calls. The route now
+returns JSON `400` errors for missing, empty, and non-string text and a `413`
+error for oversized text. I reran the evaluation and confirmed that these
+requests no longer create normal decision entries.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
@@ -629,13 +665,95 @@ responses.
 <!-- For each attack still getting through and each criterion still missed:
      what you'd do, and why you stopped. -->
 
+### Missed criteria
+
+**Criterion 1 — false positives:** 2 of 10 human samples were still labelled
+high-confidence AI in every trial. I would reduce the influence of the model
+signal or raise the AI threshold so predictable human writing is more likely to
+remain `unsure`. I stopped because changing the scoring rule would affect every
+attack family, and I chose to fix the route-validation failure first.
+
+**Criterion 2 — score spread:** The AI samples still averaged 0.480 while the
+human samples averaged 0.510, producing a gap of -0.031 instead of +0.20. I
+would replace or recalibrate the model signal and reconsider the equal 50/50
+combining rule. I stopped because the existing signals did not provide enough
+separation for a safe threshold change, and I did not have time to redesign the
+detector.
+
+### Evasion attacks that still got through
+
+**EV01–EV09:** These AI texts received `unsure` or `human` labels after typos,
+punctuation changes, sentence restructuring, unusual vocabulary, or a human
+opening changed their surface statistics. The problem is mainly **signal two**,
+with the combining rule allowing the lower style score to pull the result away
+from AI. I would make the model signal more influential or add a signal that is
+less sensitive to surface editing. I stopped because that would require
+recalibrating the scoring pipeline and rerunning all criteria.
+
+### False-positive attacks that still got through
+
+**FP02–FP07:** Formal, careful, technical, templated, or deliberately repetitive
+human writing was labelled high-confidence AI. The mechanism is **signal one**
+overvaluing predictable wording; the style signal did not provide enough
+counter-evidence, and the combining rule kept the score above 0.65. I would
+lower the model signal weight or widen the `unsure` band above 0.65. I stopped
+because reducing false positives would allow more AI text to pass and I did not
+want to change the thresholds without another full evaluation.
+
+### Malformed inputs that still got through
+
+**MF02:** A one-character string caused a `500` because the detector rejected
+text that passed the route's current validation. I would add a minimum-length or
+minimum-token check and return a JSON `400` response before calling the
+detector. I stopped after fixing the five malformed cases required by criterion
+5 because the one-character minimum-length rule was outside that criterion.
+
+**MF03–MF07:** Control characters, punctuation-only text, emoji-only text, and
+right-to-left text were accepted and scored. The route checks type, emptiness,
+and maximum length, but not whether the text contains meaningful scorable
+content. I would add a deliberate content-validity policy, while preserving
+legitimate multilingual text. I stopped because rejecting these cases safely
+requires a clearer language and Unicode policy than this project currently
+defines.
+
+**RQ02:** A missing `creator_id` was accepted and scored. I would require a
+non-empty string creator ID before submission. I stopped because creator ID
+validation was not part of criterion 5.
+
+**RQ06:** An object was accepted as `creator_id`. I would validate that
+`creator_id` is a non-empty string and reject other types with JSON `400`. I
+stopped for the same scope reason as RQ02.
+
+### Flooding attacks that still got through
+
+**FL01_01–FL01_05:** The first five rapid submissions were accepted because the
+configured policy allows five submissions per minute. I would add a smaller
+burst limit or a short cooldown so a flood cannot consume five model evaluations
+immediately. I stopped because the current rate limit already blocks requests
+six through twelve, and a stricter burst limit could interfere with legitimate
+writers making several revisions.
+
+The remaining flood requests, `FL01_06`–`FL01_12`, were correctly held with
+`429` responses. The prompt-injection attacks were also held because the
+instructions stayed inside the submitted text and did not change the service's
+response format or audit behavior.
+
+### Overall stopping point
+
+The input-validation improvement fixed criterion 5 in all three trials. I
+stopped before changing the scoring weights or thresholds because those changes
+would affect false positives, evasion resistance, label coverage, and the
+score-spread criterion at the same time.
 
 
 **The trade I'd make if this ran for real:**
 
 <!-- Two sentences. Fewer wrong accusations means more AI text getting through.
      Say which way you'd go and WHO PAYS FOR IT. -->
-
+I would prioritize fewer wrong accusations and widen the `unsure` range, even
+if more AI-written text passed undetected. The AI authors would pay that cost
+through reduced detection coverage, while real human writers would be protected
+from being falsely accused.
 
 
 <!-- ═════════════════════════════════════════════════════════════════════
