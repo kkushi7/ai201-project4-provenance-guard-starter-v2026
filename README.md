@@ -542,6 +542,65 @@ that `/submit` needed to validate the request before calling
 ### Attack Run — After
 
 <!-- Same format. `run_attacks.py --label after` -->
+| ID | Family | Targeting | Status | Content ID | Guess | Score | Verdict |
+|---|---|---|---|---|---|---|---|
+| EV01 | evasion | signal two: typos raise word variety | 200 | `0168c2cd-fdce-4228-9e5c-8ee68a2b252b` | unsure | 0.359 | BROKE |
+| EV02 | evasion | signal two: broken-up sentences raise length spread | 200 | `6dd8d7f6-873b-4c5b-b0b3-2e8f3720079c` | unsure | 0.439 | BROKE |
+| EV03 | evasion | signal two: a pasted quotation changes the shape | 200 | `8fe27f76-b6da-403a-9d47-d497dc3773be` | unsure | 0.551 | BROKE |
+| EV04 | evasion | signal one: unusual words raise perplexity | 200 | `9db01e98-f09a-426f-bb82-fa045a288e49` | unsure | 0.578 | BROKE |
+| EV05 | evasion | both signals: heavy human editing pass | 200 | `ce5306f4-7fda-4283-a72f-05937645f6cc` | human | 0.342 | BROKE |
+| EV06 | evasion | signal two: one very long sentence and one very short | 200 | `d0b80f2f-8844-44e4-8786-31df6496c91a` | unsure | 0.424 | BROKE |
+| EV07 | evasion | signal two: padding with punctuation | 200 | `96f8a2aa-6270-4884-905c-fffd40e0d493` | unsure | 0.608 | BROKE |
+| EV08 | evasion | signal one: text below the token window | 200 | `d0e33b4c-ade8-4878-949a-5f0de280e906` | human | 0.335 | BROKE |
+| EV09 | evasion | both: AI text with a human opening paragraph bolted on | 200 | `5b6a3aeb-8afd-4bf4-b836-551accd80053` | unsure | 0.566 | BROKE |
+| EV10 | evasion | signal two: repeated stanza structure | 200 | `1f21d952-2b2d-4659-a5cc-8c31dde2dc53` | ai | 0.841 | HELD |
+| FP01 | false_positive | plain, clear human writing with no flourishes | 200 | `11165cf1-820d-4480-944e-cff849dc36c5` | unsure | 0.556 | HELD |
+| FP02 | false_positive | human writing in a formal register | 200 | `370175eb-a371-4e3d-b29c-c47245628507` | ai | 0.662 | BROKE |
+| FP03 | false_positive | a non-native English speaker writing carefully | 200 | `31cacd0e-57ea-4c78-91bd-2966b3cb20b5` | ai | 0.676 | BROKE |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `5dabc30e-0820-4ed7-8e38-094d208d97d1` | ai | 0.661 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `68e8a32d-9af8-4da4-b1f8-f2ca402d7ac1` | ai | 0.705 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `8894cea9-af88-405b-9d0c-bb8841dd365f` | ai | 0.670 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `9ca46c32-b8e7-48de-b000-4d59e3c4fcdb` | ai | 0.676 | BROKE |
+| FP08 | false_positive | very short genuine human submission | 200 | `a5430f6f-20fd-404f-a198-86e5a0fa4b57` | human | 0.291 | HELD |
+| PI01 | prompt_injection | instruction to ignore the check | 200 | `9749e8c7-4aaf-44dd-9ed7-20849a2a116d` | unsure | 0.397 | HELD |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `0b9b9cac-10eb-447d-90c6-b997bb226a29` | human | 0.250 | HELD |
+| PI03 | prompt_injection | instruction wrapped in the writer's voice | 200 | `108dbbc5-266d-475f-bd78-0434c5f13740` | unsure | 0.528 | HELD |
+| PI04 | prompt_injection | attempt to make the label text hostile | 200 | `30a779a8-bfd6-42be-991a-a997fa429442` | unsure | 0.436 | HELD |
+| PI05 | prompt_injection | attempt to inject into the audit log | 200 | `8d6cbf20-e174-4266-b42f-4176f8ca7597` | unsure | 0.443 | HELD |
+| PI06 | prompt_injection | instruction plus real human text | 200 | `a473590b-c41d-4406-ac98-697a62ee9790` | unsure | 0.530 | HELD |
+| MF01 | malformed | text is only whitespace | 400 | `—` | — | — | HELD |
+| MF02 | malformed | text is a single character | 500 | `—` | — | — | BROKE |
+| MF03 | malformed | text is control characters | 200 | `8e692dde-9efa-4a87-b54b-1e13c080f99c` | human | 0.200 | BROKE |
+| MF04 | malformed | text is only punctuation | 200 | `a7204197-1f30-479b-b7c2-1385c2ad09b3` | unsure | 0.406 | BROKE |
+| MF05 | malformed | text is a very long single word | 200 | `94365cb6-b1f1-44f6-99b6-8e792a18abf9` | ai | 0.799 | BROKE |
+| MF06 | malformed | text is emoji only | 200 | `4cb9ab66-3614-4a51-bccc-7fdb050e4ca4` | ai | 0.898 | BROKE |
+| MF07 | malformed | text is right-to-left script | 200 | `10aa970f-6441-4701-a433-6e2fdbdeca08` | ai | 0.944 | BROKE |
+| MF08 | malformed | text is 60,000 characters | 413 | `—` | — | — | HELD |
+| RQ01 | malformed | no text field at all | 400 | `—` | — | — | HELD |
+| RQ02 | malformed | no creator_id | 200 | `d95f4d5c-d78a-413d-9c7d-3a0c04ada38f` | unsure | 0.402 | BROKE |
+| RQ03 | malformed | text is a number | 400 | `—` | — | — | HELD |
+| RQ04 | malformed | text is a list | 400 | `—` | — | — | HELD |
+| RQ05 | malformed | text is null | 400 | `—` | — | — | HELD |
+| RQ06 | malformed | creator_id is an object | 200 | `1b486109-b8b1-4d84-b8f9-be7c13902e3a` | human | 0.269 | BROKE |
+| RQ07 | malformed | body is a JSON array, not an object | 400 | `—` | — | — | HELD |
+| RQ08 | malformed | body is unparseable JSON | 400 | `—` | — | — | HELD |
+| RQ09 | malformed | body is empty | 400 | `—` | — | — | HELD |
+| RQ10 | malformed | body is form-encoded, not JSON | 429 | `—` | — | — | HELD |
+| RQ11 | malformed | body is JSON claiming to be plain text | 429 | `—` | — | — | HELD |
+| RQ12 | malformed | deeply nested JSON | 400 | `—` | — | — | HELD |
+| FL01_01 | flood_same_creator | 20 rapid submissions from one creator | 200 | `a07e30e4-d2fc-4224-9ed7-882cff7ebf3e` | human | 0.296 | BROKE |
+| FL01_02 | flood_same_creator | 20 rapid submissions from one creator | 200 | `44b9ec06-e9b2-47ac-8c79-0b1d308d32bf` | human | 0.296 | BROKE |
+| FL01_03 | flood_same_creator | 20 rapid submissions from one creator | 200 | `f57bf133-13cc-4ab2-bf36-3642f1a3c3da` | human | 0.296 | BROKE |
+| FL01_04 | flood_same_creator | 20 rapid submissions from one creator | 200 | `dd322acb-24cb-4d34-8faf-f5ad41fe426c` | human | 0.296 | BROKE |
+| FL01_05 | flood_same_creator | 20 rapid submissions from one creator | 200 | `dbff1970-f37f-4258-91ad-aef4f53a5db2` | human | 0.296 | BROKE |
+| FL01_06 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_07 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_08 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_09 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_10 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_11 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_12 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
