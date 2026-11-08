@@ -202,9 +202,40 @@ def submit():
     what should this do when `text` is missing, empty, or enormous? A crash on
     a malformed input is one of the most common real failures there is.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
 
-    text = payload.get("text", "")
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "invalid_request",
+            "message": "Request body must be a JSON object.",
+        }), 400
+
+    if "text" not in payload:
+        return jsonify({
+            "error": "missing_text",
+            "message": "The text field is required.",
+        }), 400
+
+    text = payload["text"]
+
+    if not isinstance(text, str):
+        return jsonify({
+            "error": "invalid_text",
+            "message": "The text field must be a string.",
+        }), 400
+
+    if not text.strip():
+        return jsonify({
+            "error": "empty_text",
+            "message": "The text field cannot be empty.",
+        }), 400
+
+    if len(text) > 10000:
+        return jsonify({
+            "error": "text_too_long",
+            "message": "The text field must be 10,000 characters or fewer.",
+        }), 413
+
     creator_id = payload.get("creator_id", "")
     content_id = str(uuid.uuid4())
 

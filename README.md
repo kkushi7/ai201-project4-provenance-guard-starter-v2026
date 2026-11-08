@@ -526,21 +526,42 @@ exposed a clear route-validation failure.
 ## The Improvement
 
 **What I changed:**
+I added input validation at the beginning of `app.py::submit`, before either
+detector signal runs. The route now rejects missing text, empty text,
+non-string text, and text longer than 10,000 characters. It returns JSON error
+responses with status `400` for invalid requests and `413` for oversized text.
+These requests return before a detector call or normal audit decision.
 
 **Which diagnosis pointed at it:**
+Criterion 5 and the malformed-request attacks showed a route-stage failure.
+Invalid input reached the detector and caused HTML `500` responses, while
+oversized input was scored normally and created a decision. The diagnosis was
+that `/submit` needed to validate the request before calling
+`detector.model_signal()` or `stylometry.style_signal()`.
 
 ### Attack Run — After
 
 <!-- Same format. `run_attacks.py --label after` -->
 
-
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. my own writing | At most 1 of 10 high-confidence AI labels | 2/10 | 2/10 | 2/10 | MISSED |
+| 2. score spread | AI average at least 0.20 above human average | AI 0.480 vs human 0.510; gap -0.031 | AI 0.480 vs human 0.510; gap -0.031 | AI 0.480 vs human 0.510; gap -0.031 | MISSED |
+| 3. label coverage | At least 1 human, unsure, and AI label | All 3 labels | All 3 labels | All 3 labels | MET |
+| 4. appeal path | HTTP 200, one appeal audit entry, original unchanged | 200, under_review | 200, under_review | 200, under_review | MET |
+| 5. bad input | 400–413 JSON error; no detector or decision | 400, 400, 400, 413 | 400, 400, 400, 413 | 400, 400, 400, 413 | MET |
 
 **Did it help, and how do I know:**
 
 <!-- Widening the unsure band usually fixes one problem and creates another.
      Reporting that trade honestly is worth full credit. -->
 
-
+Yes, it fixed the specific route-validation failures from criterion 5. Missing
+text, empty text, non-string text, and text longer than 10,000 characters are
+rejected before scoring and do not create normal decision entries. It does not
+fix the false-positive or score-separation problems because those occur in the
+signals and combining rule. I verified the change by rerunning:python run_eval.py --label after and checking that all four bad-input cases returned JSON 400 or 413
+responses.
 
 ---
 
