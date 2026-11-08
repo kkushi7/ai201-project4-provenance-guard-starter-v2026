@@ -108,7 +108,8 @@ def main():
 
     rows = []
     for scenario in scenarios.SCENARIOS:
-        print(f"\n{scenario['name']}  (criterion {scenario.get('criterion') or '—'})")
+        print(
+            f"\n{scenario['name']}  (criterion {scenario.get('criterion') or '—'})")
 
         trials = []
         for trial in range(1, args.trials + 1):
@@ -119,7 +120,7 @@ def main():
                     response = requests.post(f"{args.url}/submit", json=body,
                                              timeout=args.timeout)
                     payload = response.json() if response.content else {}
-                    results.append({
+                    result = {
                         "status": response.status_code,
                         "guess": payload.get("guess"),
                         "confidence": payload.get("confidence"),
@@ -127,7 +128,26 @@ def main():
                         "style_score": payload.get("style_score"),
                         "label": payload.get("label"),
                         "sent": preview,
-                    })
+                    }
+
+                    if scenario.get("requires_appeal"):
+                        appeal = requests.post(
+                            f"{args.url}/appeal",
+                            json={
+                                "content_id": payload.get("content_id"),
+                                "reasoning": (
+                                    "I wrote this submission myself and request "
+                                    "a review of the decision."
+                                ),
+                            },
+                            timeout=args.timeout,
+                        )
+                        result["appeal_status"] = appeal.status_code
+                        result["appeal_response"] = (
+                            appeal.json() if appeal.content else {}
+                        )
+
+                    results.append(result)
                 except Exception as exc:  # noqa: BLE001
                     results.append({"status": None, "error": f"{type(exc).__name__}: {exc}",
                                     "sent": preview})
