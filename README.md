@@ -310,13 +310,14 @@ The worst outcome was FP07. It was human writing that deliberately repeated a ph
 
 <!-- Your five criteria across three trials. `run_eval.py --label before`. -->
 
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict | How I decided |
 |---|---|---|---|---|---|
-| 1. my own writing | At most 1 of 10 high-confidence AI labels | 2/10 | 2/10 | 2/10 | MISSED |
-| 2. score spread | AI average at least 0.20 above human average | AI 0.480 vs human 0.510; gap -0.031 | AI 0.480 vs human 0.510; gap -0.031 | AI 0.480 vs human 0.510; gap -0.031 | MISSED |
-| 3. label coverage | At least 1 human, unsure, and AI label | All 3 labels | All 3 labels | All 3 labels | MET |
-| 4. appeal path | HTTP 200, one appeal audit entry, original unchanged | 200, under_review | 200, under_review | 200, under_review | MET |
-| 5. bad input | 400–413 JSON error; no detector or decision | First 3 non-JSON errors; oversized text 200 | First 3 non-JSON errors; oversized text 200 | First 3 non-JSON errors; oversized text 200 | MISSED |
+| 1. my own writing | At most 1 of 10 high-confidence AI labels | 2/10 | 2/10 | 2/10 | MISSED | The target allowed at most 1/10 high-confidence AI labels. Each trial produced 2/10, so all trials missed the target. |
+| 2. score spread | AI average at least 0.20 above human average | AI 0.480 vs human 0.510; gap -0.031 | AI 0.480 vs human 0.510; gap -0.031 | AI 0.480 vs human 0.510; gap -0.031 | MISSED | The target required the AI average to be at least 0.20 higher than the human average. Each trial produced: AI average: 0.480, Human average: 0.510, Difference: -0.031
+The AI group scored lower, so the target was missed. |
+| 3. label coverage | At least 1 human, unsure, and AI label | All 3 labels | All 3 labels | All 3 labels | MET | Every trial produced all three labels: human, unsure, and ai. |
+| 4. appeal path | HTTP 200, one appeal audit entry, original unchanged | 200, under_review | 200, under_review | 200, under_review | MET | Every trial returned HTTP 200 with "status": "under_review". The audit log also showed one appeal entry for each content ID while preserving the original decision. |
+| 5. bad input | 400–413 JSON error; no detector or decision | First 3 non-JSON errors; oversized text 200 | First 3 non-JSON errors; oversized text 200 | First 3 non-JSON errors; oversized text 200 | MISSED | The target required 400–413 JSON errors and no decision entry. Instead, the first three invalid requests produced non-JSON server errors, and the oversized request returned 200 and created a normal AI decision. |
 
 **Real output from one trial**, pasted as text, naming the file and function
 that produced it:
@@ -427,7 +428,98 @@ that produced it:
 
      Look for a pattern. Five failures on one signal is one problem, not five. -->
 
+### Criterion 1 — false positives
 
+This target was MISSED in all three trials: 2 of 10 human samples received
+the high-confidence AI label. The main problem is **signal one**, the model
+signal. Predictable everyday wording such as “The sun is shining and the
+weather is nice” received a high model score. The **combining rule** then
+averaged that high model score with the style score and produced a combined
+score above 0.65. The **label mapping** correctly converted that score into the
+AI label, so the failure is not in the label text or threshold lookup; it is
+an upstream false-positive score.
+
+### Criterion 2 — score spread
+
+This target was MISSED in all three trials. The five intended AI samples
+averaged 0.480, while the five intended human samples averaged 0.510, giving
+an AI-minus-human gap of -0.031 instead of at least 0.20.
+
+The main failure is **signal one**: its scores did not separate the two groups.
+The **signal two** scores were also similar across the groups, so the
+**combining rule** had no strong independent evidence to create separation.
+The equal 50/50 average preserved the overlap. The **label mapping** behaved
+consistently with the resulting scores; it was not the cause of the poor
+separation.
+
+### Criterion 5 — bad input
+
+This target was MISSED in all three trials. Missing text, empty text, and
+non-string text produced non-JSON server errors instead of client-error JSON
+responses. Text longer than 10,000 characters received a normal `200` decision.
+
+The failure is at the **route** stage. `/submit` uses a default empty string for
+missing text and passes invalid values directly to the detector and style
+functions. It performs no type, empty-string, or length validation before
+running the pipeline. The route therefore allows invalid requests to reach
+the signals, and the oversized request reaches the normal scoring path and
+creates a decision. The **label mapping** is not responsible for this failure.
+
+### Broken attack patterns
+
+The broken attacks show three main patterns rather than independent failures.
+
+**Evasion: EV10.** The repeated-stanza attack was classified as AI with a
+combined score of 0.8412. This is primarily a **signal one** and **signal two**
+failure: repeated text is highly predictable to the model and has a regular,
+repetitive surface shape. The **combining rule** reinforces both signals
+because they point in the same AI direction, and the **label mapping** correctly
+returns the high-confidence AI label.
+
+**False positives: FP02–FP07.** These genuine human samples were classified
+as AI. The recurring mechanism is **signal one** overvaluing formal,
+predictable, or carefully structured language. The style signal does not
+provide enough counter-evidence, so the **combining rule** keeps the combined
+score above the 0.65 threshold. The **label mapping** then correctly reports
+AI for those scores.
+
+FP01 returned `unsure` and FP08 returned `human`; those should be treated as
+held rather than broken if the attack succeeds only when human writing receives
+the high-confidence AI label.
+
+**Prompt injection: PI01 and PI03–PI06.** The **route** accepts
+instruction-bearing text as ordinary submission content and has no explicit
+prompt-injection detection or isolation step. The text is sent directly to the
+signals. The detector does not follow the instruction as a language-model
+assistant, but the route also does not reject or separately record the
+injection. This is a route/input-handling weakness, not a label-mapping
+failure.
+
+**Malformed requests: MF02, RQ01, RQ03–RQ05, RQ07–RQ09, and RQ12.** These
+fail at the **route** boundary. Missing fields, wrong JSON types, non-object
+bodies, and empty bodies are not validated before detector or style processing.
+They therefore produce uncaught exceptions and HTML `500` responses instead of
+controlled JSON client errors. The **signals** are being called with invalid
+inputs because the route does not stop them first.
+
+**Flooding: FL01_01–FL01_05.** The **route/rate-limiting stage** deliberately
+allows the first five requests under the configured limit of five per minute.
+Those requests receive normal decisions; later requests receive `429`
+responses. This is a partial result of the configured policy, not five
+independent detector failures. The protection begins only after the allowance
+has been consumed.
+
+### Overall pattern
+
+The largest repeated problem is upstream scoring and validation. Predictable
+human writing receives high model scores, while the style signal is not strong
+enough to correct it. Separately, `/submit` lacks a validation guard before
+calling either signal. The label mapping is comparatively consistent: it
+returns the label associated with the combined score it receives.
+
+The targets were not all too low. Criterion 3 was met and criterion 4 was met,
+but criterion 1 exposed an unacceptable false-positive rate and criterion 5
+exposed a clear route-validation failure.
 
 ---
 
